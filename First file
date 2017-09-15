@@ -1,0 +1,25 @@
+pig -useHCatalog
+
+hive> create table Customers(id int,name string,location string) row format delimited fields terminated by ',';
+
+Customers = LOAD '/Sai_source/Customers.txt' USING PigStorage(',') as (id:int, name:chararray, location:chararray);
+
+dump Customers;
+
+(1,Rajiv,Hyderabad)
+(2,siddarth,Kolkata)
+(3,Rajesh,Delhi)
+
+Customers1 = FILTER Customers BY (id != 1);
+
+STORE Customers1 into 'sai.Customers' USING org.apache.hive.hcatalog.pig.HCatStorer();
+
+department_hive = LOAD 'sai.department' USING org.apache.hive.hcatalog.pig.HCatLoader();
+
+dump department_hive;
+
+Result set:
+ 
+(10,ACCOUNTING,NEW YORK,)
+(20,RESEARCH,DALLAS,)
+(30,SALES,CHICAGO,)
