@@ -1,0 +1,36 @@
+LOAD XML file in PIG USING XPath
+
+
+<CATALOG>
+<BOOK>
+<TITLE>Hadoop Defnitive Guide</TITLE>
+<AUTHOR>Tom White</AUTHOR>
+<COUNTRY>US</COUNTRY>
+<COMPANY>CLOUDERA</COMPANY>
+<PRICE>24.90</PRICE>
+<YEAR>2012</YEAR>
+</BOOK>
+<BOOK>
+<TITLE>Programming Pig</TITLE>
+<AUTHOR>Alan Gates</AUTHOR>
+<COUNTRY>USA</COUNTRY>
+<COMPANY>Horton Works</COMPANY>
+<PRICE>30.90</PRICE>
+<YEAR>2013</YEAR>
+</BOOK>
+</CATALOG>
+
+1. Using Regular Expression
+2. Using XPath
+
+REGISTER piggybank.jar
+
+ A =  LOAD 'Sai_source/books.xml' using org.apache.pig.piggybank.storage.XMLLoader('BOOK') as (x:chararray);
+ B = foreach A GENERATE FLATTEN(REGEX_EXTRACT_ALL(x,'<BOOK>\\s*<TITLE>(.*)</TITLE>\\s*<AUTHOR>(.*)</AUTHOR>\\s*<COUNTRY>(.*)</COUNTRY>\\s*<COMPANY>(.*)</COMPANY>\\s*<PRICE>(.*)</PRICE>\\s*<YEAR>(.*)</YEAR>\\s*</BOOK>'));
+dump B;
+
+REGISTER piggybank.jar
+DEFINE XPath org.apache.pig.piggybank.evaluation.xml.XPath();
+A =  LOAD '/Sai_source/books.xml' using org.apache.pig.piggybank.storage.XMLLoader('BOOK') as (x:chararray);
+B = FOREACH A GENERATE XPath(x, 'BOOK/AUTHOR'), XPath(x, 'BOOK/PRICE');
+dump B;

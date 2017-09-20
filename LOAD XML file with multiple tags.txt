@@ -1,0 +1,29 @@
+LOAD XML file in PIG USING XPath
+
+Step 1: REGISTER the piggybank-0.11.0.jar in PIG
+Step 2: DEFINE XPath org.apache.pig.piggybank.evaluation.xml.XPath();
+DEFINE XPathAll org.apache.pig.piggybank.evaluation.xml.XPathAll();
+
+Step 3:
+A = LOAD '/Sai_source/information.xml' using org.apache.pig.piggybank.storage.XMLLoader('information') as (x:chararray);
+B = FOREACH A GENERATE XPath(x, 'information/url'), XPath(x, 'information/category'), XPath(x, 'information/usercount');
+C = LOAD '/Sai_source/information.xml' using org.apache.pig.piggybank.storage.XMLLoader('reviews') as (review:chararray);
+D = FOREACH C GENERATE XPath(review,'reviews');
+
+(or) using Xpathall
+
+B = FOREACH A GENERATE  XPathAll(x, 'information/url'), XPathAll(x, 'information/reviews/review').$0, XPathAll(x, 'information/reviews/review').$1, XPathAll(x, 'information/reviews/review').$2;
+
+E = cross B,D;
+dump E;
+
+<information>   
+<url>htp://www.abc.com/</url>
+<category>Sports</category>
+<usercount>120</usercount>
+<reviews>    
+<review>good site</review>
+<review>This is Avg site</review>
+<review>Bad site</review>
+</reviews>
+</information>

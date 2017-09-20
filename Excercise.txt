@@ -1,0 +1,185 @@
+lines = LOAD '/Sai_source/wordcount.txt' using PigStorage(',') as (line: chararray);
+
+words = FOREACH lines GENERATE TOKENIZE(line);
+
+describe words;
+
+({(This),(is),(my),(new),(step),(by),(step),(script),(for),(word),(count)})
+
+words = FOREACH lines GENERATE FLATTEN(TOKENIZE(line)) as word;
+
+describe words;
+
+words: {word: chararray}
+
+dump words;
+
+(This)
+(is)
+(my)
+(new)
+(step)
+(by)
+(step)
+(script)
+(for)
+(word)
+(count)
+
+grouped = GROUP words by word;
+
+describe grouped;
+
+grouped: {group: chararray,words: {(word: chararray)}}
+
+dump grouped;
+
+(by,{(by)})
+(is,{(is)})
+(my,{(my)})
+(for,{(for)})
+(new,{(new)})
+(This,{(This)})
+(step,{(step),(step)})
+(word,{(word)})
+(count,{(count)})
+(script,{(script)})
+
+wordcount = FOREACH grouped GENERATE group, COUNT(words);
+
+dump wordcount;
+
+(by,1)
+(is,1)
+(my,1)
+(for,1)
+(new,1)
+(This,1)
+(step,2)
+(word,1)
+(count,1)
+(script,1)
+
+LOAD Data to Pig relation with out schema
+
+dept = LOAD '/Raghu/dept.csv' USING PigStorage(',');
+describe dept;
+
+Schema for dept unknown.
+
+dept_id = FOREACH dept GENERATE $0;
+
+describe dept_id;
+
+dept_id: {bytearray}
+
+dept_id1 = FOREACH dept GENERATE (int)$0;
+
+describe dept_id1;
+
+dept_id1: {int}
+
+ dump dept_id1;
+ 
+(10)
+(20)
+(30)
+(40)
+
+group the data by using pig relation count of all rows:
+
+department_hive = LOAD 'sai.department' USING org.apache.hive.hcatalog.pig.HCatLoader();
+
+department_filter = FILTER department_hive by deptno!= 10;
+
+dump department_filter;
+
+(20,RESEARCH,DALLAS,)
+(30,SALES,CHICAGO,)
+(40,OPERATIONS,BOSTON,)
+
+department_group = GROUP department_filter ALL; 
+
+describe department_group;
+
+department_group: {group: chararray,department_filter: {(deptno: int,deptname: chararray,location: chararray,designation: chararray)}}
+
+department_count = FOREACH department_group GENERATE group,COUNT_STAR(department_filter) as count;
+
+dump department_count;
+
+(all,3)
+
+department_count1 = FOREACH department_group GENERATE COUNT_STAR(department_filter.deptno) as count1;
+
+group the data by key
+
+hive > create table orders(ORDER_ID int,ORDER_DATE string,ORDER_MODE string,CUSTOMER_ID int,ORDER_STATUS int,ORDER_TOTAL float,SALES_REP_ID int,PROMOTION_ID int)
+row format delimited fields terminated by ',' ;
+
+hive > LOAD data inpath '/Sai_source/order.csv' into table orders;
+
+grunt> orders =  LOAD 'sai.orders' USING org.apache.hive.hcatalog.pig.HCatLoader();
+
+groupbyorders = GROUP orders BY order_mode;
+
+describe groupbyorders;
+
+groupbyorders: {group: chararray,orders: {(order_id: int,order_date: chararray,order_mode: chararray,customer_id: int,order_status: int,order_total: float,sales_rep_id: int,promotion_id: int)}}
+
+groupbyorderslimit = LIMIT groupbyorders 50;
+
+dump groupbyorderslimit;
+
+countbyorders = FOREACH groupbyorders GENERATE group, COUNT(orders.order_id) as count;
+
+dump countbyorders;
+
+sort the output of a pig relation
+
+sortorders = ORDER orders by order_status desc;
+ 
+dump sortorders;
+
+orderstatus =  FOREACH orders GENERATE order_status;
+
+orderstatusdistinct = DISTINCT orderstatus;
+
+order_upper = FOREACH orders GENERATE order_id,org.apache.pig.piggybank.evaluation.string.UPPER(order_mode) as order_mode;
+
+dump order_upper;
+
+DEFINE UPPER org.apache.pig.piggybank.evaluation.string.UPPER();
+
+order_upper1 = FOREACH orders GENERATE order_id,UPPER(order_mode) as order_mode;
+
+dump order_uppper1;
+
+Joins
+
+hive > create table orders(ORDER_ID int,ORDER_DATE string,ORDER_MODE string,CUSTOMER_ID int,ORDER_STATUS int,ORDER_TOTAL float,SALES_REP_ID int,PROMOTION_ID int)
+row format delimited fields terminated by ',' ;
+
+hive > LOAD data inpath '/Sai_source/order.csv' into table orders;
+
+grunt> orders =  LOAD 'sai.orders' USING org.apache.hive.hcatalog.pig.HCatLoader();
+
+hive > create table order_items(order_item_id int,line_item_id int,product_id int,unit_price float,quantity int)
+row format delimited fields terminated by ',' ;
+
+hive > LOAD data inpath '/Sai_source/order_items.csv' into table order_items;
+
+grunt> order_items =  LOAD 'sai.order_items' USING org.apache.hive.hcatalog.pig.HCatLoader();
+
+orderjoin = JOIN orders by order_id,order_items by order_item_id;
+
+describe orderjoin;
+
+orderjoin: {orders::order_id: int,orders::order_date: chararray,orders::order_mode: chararray,orders::customer_id: int,orders::order_status: int,orders::order_total: float,orders::sales_rep_id: int,orders::promotion_id: int,order_items::order_item_id: int,order_items::line_item_id: int,order_items::product_id: int,order_items::unit_price: float,order_items::quantity: int}
+
+orderrevenuebyitemid = FOREACH orderjoin GENERATE order_items::order_item_id,orders::order_total;
+
+orderrevenuegroup = GROUP orderrevenuebyitemid BY order_items::order_item_id;
+
+orderrevenue = FOREACH orderrevenuegroup GENERATE group,SUM(orderrevenuebyitemid.orders::order_total);
+

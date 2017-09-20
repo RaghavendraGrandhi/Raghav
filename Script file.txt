@@ -1,0 +1,23 @@
+<data>  
+<id>11</id>
+<name>Sai</name>
+<marks>90</marks>
+</data>
+
+REGISTER 'Raghu/piggybank-0.11.0.jar';
+DEFINE XPath org.apache.pig.piggybank.evaluation.xml.XPath();
+simple1 =  LOAD '/Sai_source/data.xml' using org.apache.pig.piggybank.storage.XMLLoader('data') as (x:chararray);
+out1 = FOREACH simple1 GENERATE XPath(x, 'data/id'), XPath(x, 'data/name'), XPath(x, 'data/marks');
+STORE out1 into '/Sai_target/data';
+
+exec data.pig
+
+hdfs: getconf -namenodes
+
+snc.hdp.local
+
+grunt> exec hdfs://snc.hdp.local:8020/Sai_source/data.pig
+
+Output:
+(Tom White,24.90)
+(Alan Gates,30.90)

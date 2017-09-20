@@ -1,0 +1,33 @@
+Step 1: REGISTER the piggybank-0.11.0.jar in PIG
+Step 2: DEFINE XPath org.apache.pig.piggybank.evaluation.xml.XPath();
+Step 3:
+A = LOAD '/Sai_source/studentreport1.xml' using org.apache.pig.piggybank.storage.XMLLoader('data') as (x:chararray);
+B = FOREACH A GENERATE XPath(x, 'data/id'), XPath(x, 'data/name'), XPath(x, 'data/marks');
+C = LOAD '/Sai_source/studentreport1.xml' using org.apache.pig.piggybank.storage.XMLLoader('grades') as (x:chararray);
+D = FOREACH C GENERATE XPath(x,'grades/grade');
+
+E = cross B,D;
+dump E;
+
+<studentreport>
+<data>  
+<id>11</id>
+<name>Sai</name>
+<marks>90</marks>
+</data>
+<data>
+<id>12</id>
+<name>Hanu</name>
+<marks>50</marks>
+</data>
+<data>
+<id>13</id>
+<name>Bala</name>
+<marks>40</marks>
+</data>
+<grades>      
+<grade>First</grade>
+<grade>Second</grade>
+<grade>Third</grade>
+</grades>
+</studentreport>

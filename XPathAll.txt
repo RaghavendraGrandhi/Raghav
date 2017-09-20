@@ -1,0 +1,55 @@
+
+DEFINE XPath org.apache.pig.piggybank.evaluation.xml.XPath();
+DEFINE XPathAll org.apache.pig.piggybank.evaluation.xml.XPathAll();
+
+
+SUBJ =  LOAD '/Sai_source/scores.xml' using org.apache.pig.piggybank.storage.XMLLoader('subject') as (xmlContents:chararray);
+
+MAR = FOREACH SUBJ GENERATE  XPathAll(xmlContents, 'subject/name'), XPathAll(xmlContents, 'subject/marks/mark').$0, XPathAll(xmlContents, 'subject/marks/mark').$1, XPathAll(xmlContents, 'subject/marks/mark').$2, XPathAll(xmlContents, 'subject/marks/mark').$3;
+
+MAR = FOREACH SUBJ GENERATE  XPathAll(xmlContents, 'subject/name'), XPathAll(xmlContents, 'marks/mark').$0;
+
+
+S =  LOAD '/Sai_source/scores.xml' using org.apache.pig.piggybank.storage.XMLLoader('subject') as (x:chararray);
+U =  FOREACH S GENERATE FLATTEN(REGEX_EXTRACT_ALL(x, '<name>(.*)</name>')) as (name:chararray);
+
+
+<scores>
+   <subject>
+       <name>Science</name>
+       <marks>
+          <mark>80</mark>
+      <mark>75</mark>
+      <mark>89</mark>
+      <mark>90</mark>
+      </marks>
+   </subject>
+   <subject>
+       <name>Maths</name>
+       <marks>
+          <mark>90</mark>
+      <mark>87</mark>
+      <mark>78</mark>
+      <mark>92</mark>
+      </marks>
+   </subject>
+   <subject>
+       <name>English</name>
+       <marks>
+          <mark>78</mark>
+      <mark>88</mark>
+      <mark>65</mark>
+      <mark>99</mark>
+      </marks>
+   </subject>
+</scores>
+
+
+<data>  
+<id>11</id>
+<name>Sai</name>
+<marks>90</marks>
+</data>
+
+
+
